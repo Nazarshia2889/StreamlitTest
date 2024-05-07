@@ -1,24 +1,22 @@
 import streamlit as st
+from streamlit_webrtc import WebRtcMode, webrtc_streamer
+import av
 import cv2
 
-def main():
-    st.set_page_config(page_title="Streamlit WebCam App")
-    st.title("Webcam Display Steamlit App")
-    st.caption("Powered by OpenCV, Streamlit")
-    cap = cv2.VideoCapture(0)
-    frame_placeholder = st.empty()
-    stop_button_pressed = st.button("Stop")
-    while cap.isOpened() and not stop_button_pressed:
-        ret, frame = cap.read()
-        if not ret:
-            st.write("Video Capture Ended")
-            break
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame_placeholder.image(frame,channels="RGB")
-        if cv2.waitKey(1) & 0xFF == ord("q") or stop_button_pressed:
-            break
-    cap.release()
-    cv2.destroyAllWindows()
+st.title("My first Streamlit app")
+st.write("Hello, world")
 
-if __name__ == "__main__":
-    main()
+threshold1 = st.slider("Threshold1", min_value=0, max_value=1000, step=1, value=100)
+threshold2 = st.slider("Threshold2", min_value=0, max_value=1000, step=1, value=200)
+
+
+def callback(frame):
+    img = frame.to_ndarray(format="bgr24")
+
+    img = cv2.cvtColor(cv2.Canny(img, threshold1, threshold2), cv2.COLOR_GRAY2BGR)
+
+    return av.VideoFrame.from_ndarray(img, format="bgr24")
+
+
+webrtc_streamer(key="example", video_frame_callback=callback,
+    media_stream_constraints={"video": True},)
